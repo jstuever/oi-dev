@@ -42,7 +42,7 @@ GCP)
 esac
 
 # Create directory to store test results
-TEST_DIR="${ASSETDIR}/e2e/$(date -u +%Y%m%d%H%M%S)"
+TEST_DIR="${ASSETDIR}/e2e/$(date -u +%Y%m%d-%H%M%S)"
 mkdir -p "${TEST_DIR}"
 
 # Run test suite
