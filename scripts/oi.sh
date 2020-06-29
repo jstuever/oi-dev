@@ -5,7 +5,7 @@ TOKEN=""
 INSTALLCONFIG=""
 LOGLEVEL="DEBUG"
 PULLSECRET="${HOME}/pull-secret.txt"
-RELEASE="4.5"
+RELEASE="4.6"
 
 usage () {
     echo "Usage: $(basename $0) [OPTIONS]... [PARAMETERS]"
