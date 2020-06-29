@@ -13,7 +13,7 @@ while true; do
     fi;
   else
     echo "${ASSETDIR}/metadata.json not found"
-    IP=""
+    IP="${1}"
   fi
 
   if [ -n "${IP}" ];
