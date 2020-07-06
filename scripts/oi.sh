@@ -5,7 +5,7 @@ TOKEN=""
 INSTALLCONFIG=""
 LOGLEVEL="DEBUG"
 PULLSECRET="${HOME}/pull-secret.txt"
-RELEASE="4.6"
+RELEASE="$(openshift-install version | grep '^release image ' | cut -d ':' -f2)"
 
 usage () {
     echo "Usage: $(basename $0) [OPTIONS]... [PARAMETERS]"
