@@ -68,9 +68,9 @@ if [ ! -d ${ASSETDIR} ]; then
     mkdir ${ASSETDIR}
 fi
 
-# Replace the registry.svc.ci.openshift.org entry in pull-secret
+# Replace the registry.ci.openshift.org entry in pull-secret
 if [ ! -z "${TOKEN}" ] && [ -f ${PULLSECRET} ]; then
-    oc login https://api.ci.openshift.org --token="${TOKEN}" >> /dev/null
+    oc login --server=https://api.ci.l2s4.p1.openshiftapps.com:6443 --token="${TOKEN}" >> /dev/null
     oc registry login --to /tmp/secret.json
     echo $(jq -sc '.[0] * .[1]' ${PULLSECRET} /tmp/secret.json) > ${PULLSECRET}
     rm /tmp/secret.json
@@ -90,7 +90,7 @@ if [ ! -f ${ASSETDIR}/install-config.yaml ] && [ ! -f ${ASSETDIR}/.openshift_ins
 fi
 
 # Override the release
-export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="registry.svc.ci.openshift.org/ocp/release:${RELEASE}"
+export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="registry.ci.openshift.org/ocp/release:${RELEASE}"
 
 # Run openshift-install passing unused args
 time openshift-install --dir=${ASSETDIR} --log-level=${LOGLEVEL} $@
