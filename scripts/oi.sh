@@ -69,6 +69,7 @@ if [ ! -d ${ASSETDIR} ]; then
 fi
 
 # Replace the registry.ci.openshift.org entry in pull-secret
+# https://console-openshift-console.apps.ci.l2s4.p1.openshiftapps.com
 if [ ! -z "${TOKEN}" ] && [ -f ${PULLSECRET} ]; then
     oc login --server=https://api.ci.l2s4.p1.openshiftapps.com:6443 --token="${TOKEN}" >> /dev/null
     oc registry login --to /tmp/secret.json
