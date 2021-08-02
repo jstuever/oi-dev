@@ -40,6 +40,8 @@ else
     if [ "${IP}" == 'null' ]; then
       IP=$(echo ${BOOTSTRAP_JSON} | jq -r '.[].networkInterfaces[0].networkIP')
     fi
+  elif [ "$(jq '.libvirt' ${ASSETDIR}/metadata.json)" != 'null' ]; then
+    IP=$(jq '.resources[] | select(.type == "libvirt_network_dns_host_template") | select(.name == "bootstrap") | .instances[0].attributes.ip' ${ASSETDIR}/terraform.tfstate | tr -d "\"")
   else
     echo "No supported platforms found in ${ASSETDIR}/metadata.json"
     exit
