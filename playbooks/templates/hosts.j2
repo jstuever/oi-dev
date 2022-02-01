@@ -1,0 +1,18 @@
+[all:vars]
+openshift_kubeconfig_path={{ kubeconfig }}
+
+[new_workers:vars]
+# oc get service -n test-ssh-bastion ssh-bastion -o jsonpath="{.status.loadBalancer.ingress[0].hostname}"
+ansible_ssh_common_args="-o IdentityFile={{ ssh_private_key }} -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -o IdentityFile={{ ssh_private_key }} -o ConnectTimeout=30 -o ConnectionAttempts=100 -o StrictHostKeyChecking=no -W %h:%p -q core@{{ ssh_bastion }}\""
+ansible_user={{ aws_distribution_dict[distribution].username }}
+ansible_become=True
+
+[new_workers]
+# hostnames must be listed by what `hostname -f` returns on the host
+# this is the name the cluster will use
+{% for host in new_workers_list %}
+{{ host }}
+{% endfor %}
+
+[workers:children]
+new_workers

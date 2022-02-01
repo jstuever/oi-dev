@@ -1,0 +1,22 @@
+---
+aws_distribution_dict:
+  centos:
+    username: "centos"
+    owners: "679593333241"
+    filters:
+      product-code: "aw0evgkw8e5c1q413zgy5pjce"  # CentOS-7 x86_64
+  rhel:
+    username: "ec2-user"
+    owners: "309956199498"  # Red Hat, Inc.
+    filters:
+      name: "RHEL-{{ distribution_version }}*Hourly*"
+      architecture: "x86_64"
+aws_instance_type: "m4.large"
+aws_key_name: "{{ lookup('env', 'OI_AWS_KEY_NAME') | default(lookup('env', 'USER'), true) }}"
+aws_region: "{{ cluster_metadata.aws.region | default('us-east-1') }}"
+aws_volumes:
+  - device_name: /dev/sda1
+    volume_size: 120
+    volume_type: gp2
+    delete_on_termination: true
+aws_zone: "{{ aws_region }}a"

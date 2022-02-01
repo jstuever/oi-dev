@@ -1,0 +1,51 @@
+---
+# This file is a derivite of https://github.com/mtnbikenc/oa-testing/blob/master/playbooks/prep40.yml
+- name: Prepare Playbook
+  hosts: new_workers
+  any_errors_fatal: true
+  gather_facts: false
+
+  vars:
+    asset_dir: "."
+    distribution: "{{ lookup('env', 'OI_DISTRIBUTION') | default('rhel', true) }}"
+    distribution_version: "{{ lookup('env', 'OI_DISTRIBUTION_VERSION') | default('8.5', true) }}"
+    fips_enable: "{{ lookup('env', 'OI_FIPS_ENABLE') | default(false, true) }}"
+    kubeconfig: "{{ asset_dir }}/auth/kubeconfig"
+    openshift_mirror: "{{ lookup('file', '~/oi/openshift-mirror.json' ) | from_json }}"
+
+  tasks:
+
+  - name: Fail if mirror credentials are not defined in ~/oi/openshift-mirror.json
+    fail:
+      msg: "url, username, and password must be defined in ~/oi/openshift-mirror.json"
+    when: (openshift_mirror.url is undefined) or (openshift_mirror.username is undefined) or (openshift_mirror.password is undefined)
+
+  - name: Get cluster version
+    command: >
+      oc version
+      --kubeconfig={{ kubeconfig }}
+      --output=json
+    register: oc_version
+    changed_when: false
+    delegate_to: localhost
+    run_once: true
+
+  - name: Set cluster version
+    set_fact:
+      release_version: "{{ (oc_version.stdout | from_json)['openshiftVersion'].split('.')[:2] | join('.') }}"
+
+  - name: Wait for host connection to ensure SSH has started
+    wait_for_connection:
+      timeout: 600
+
+  - name: Create OCP devel repos
+    include_tasks: tasks/devel-repos.yaml
+
+  - name: Enable FIPS
+    include_tasks: tasks/enable_fips.yml
+    when: fips_enable | bool
+
+  - meta: flush_handlers
+
+  handlers:
+    - include: tasks/refresh-cache.yaml

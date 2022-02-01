@@ -1,0 +1,100 @@
+---
+- name: Retrieve platform AMI list
+  amazon.aws.ec2_ami_info:
+    region: "{{ aws_region }}"
+    owners: "{{ aws_distribution_dict[distribution].owners }}"
+    filters: "{{ aws_distribution_dict[distribution].filters }}"
+  register: ec2_ami_facts_results
+  run_once: true
+
+- name: Set aws_ami to most recent image
+  set_fact:
+    aws_ami: "{{ ec2_ami_facts_results.images[-1].image_id }}"
+  run_once: true
+
+- name: Create machineset_name
+  set_fact:
+    machineset_name: "{{ machineset_obj.metadata.name ~ '-' ~ distribution ~ '-' ~ distribution_version }}"
+
+- name: Update machineset definition
+  set_fact:
+    machineset: "{{ machineset_obj | combine(dict_edit, recursive=True) }}"
+  vars:
+    dict_edit:
+      metadata:
+        name: "{{ machineset_name }}"
+        resourceVersion: ""
+      spec:
+        selector:
+          matchLabels:
+            machine.openshift.io/cluster-api-machineset: "{{ machineset_name }}"
+        template:
+          metadata:
+            labels:
+              machine.openshift.io/cluster-api-machineset: "{{ machineset_name }}"
+          spec:
+            providerSpec:
+              value:
+                ami:
+                  id: "{{ aws_ami }}"
+                keyName: "{{ aws_key_name }}"
+
+- name: Import machineset definition
+  command: >
+    oc apply -f -
+    --kubeconfig={{ kubeconfig }}
+  register: oc_apply
+  args:
+    stdin: "{{ machineset | to_yaml }}"
+  changed_when:
+  - ('created' in oc_apply.stdout) or
+    ('configured' in oc_apply.stdout)
+
+- name: Get machines in the machineset
+  command: >
+    oc get machine
+    --kubeconfig={{ kubeconfig }}
+    --namespace=openshift-machine-api
+    --selector='machine.openshift.io/cluster-api-machineset={{ machineset_name }}'
+    --output=json
+  register: oc_get_machine
+  until:
+  - oc_get_machine.stdout != ''
+  - (oc_get_machine.stdout | from_json)['items'] is defined
+  - (oc_get_machine.stdout | from_json)['items'] | length > 0
+  changed_when: false
+
+- name: Create list of machines
+  set_fact:
+    worker_machines: "{{ (oc_get_machine.stdout | from_json)['items'] | map(attribute='metadata.name') | list }}"
+
+- name: Wait for machines to be provisioned
+  command: >
+    oc get machine {{ item }}
+    --kubeconfig={{ kubeconfig }}
+    --namespace=openshift-machine-api
+    --output=json
+  loop: "{{ worker_machines }}"
+  register: new_machine
+  until:
+  - new_machine.stdout != ''
+  - (new_machine.stdout | from_json).status is defined
+  - (new_machine.stdout | from_json).status.phase == 'Provisioned'
+  retries: 36
+  delay: 5
+  changed_when: false
+
+- name: Get machines in the machineset after provisioning
+  command: >
+    oc get machine
+    --kubeconfig={{ kubeconfig }}
+    --namespace=openshift-machine-api
+    --selector='machine.openshift.io/cluster-api-machineset={{ machineset_name }}'
+    --output=json
+  register: oc_get_machine
+  changed_when: false
+
+- name: Add hostname to new_workers_list
+  set_fact:
+    new_workers_list: "{{ new_workers_list + [ item.status.addresses | selectattr('type', 'match', '^InternalDNS$') | map(attribute='address') | first ] }}"
+  loop: "{{ (oc_get_machine.stdout | from_json)['items'] }}"

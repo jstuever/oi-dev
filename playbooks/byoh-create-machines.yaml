@@ -1,0 +1,93 @@
+---
+# This file is a derivite of https://github.com/mtnbikenc/oa-testing/blob/master/playbooks/create-machines.yml
+- name: Create instances using machine sets
+  hosts: localhost
+  connection: local
+
+  vars:
+    asset_dir: "."
+    distribution: "{{ lookup('env', 'OI_DISTRIBUTION') | default('rhel', true) }}"
+    distribution_version: "{{ lookup('env', 'OI_DISTRIBUTION_VERSION') | default('8.5', true) }}"
+    inventory_dir: "{{ asset_dir }}/byoh"
+    kubeconfig: "{{ asset_dir }}/auth/kubeconfig"
+    ssh_bastion: "{{ lookup('env', 'OI_SSH_BASTION') | default('', true) }}"
+    ssh_private_key: "{{ lookup('env', 'OI_SSH_PRIVATE_KEY') | default('~/.ssh/id_rsa', true) }}"
+
+    cluster_metadata: "{{ lookup('file', asset_dir ~ '/metadata.json') | from_json }}"
+    infra_id: "{{ lookup('env', 'OI_INFRAID') | default(cluster_metadata.infraID, true) }}"
+    platform: "{{ lookup('env', 'OI_PLATFORM') | default('', true) }}"
+
+    new_workers_list: []
+
+  tasks:
+
+  - name: Ensure required variables
+    fail:
+      msg: "{{ item }} is empty"
+    when: item | length == 0
+    loop:
+      - "{{ cluster_metadata }}"
+      - "{{ infra_id }}"
+
+  - name: Determine platform from metadata
+    set_fact:
+      platform: "{{ item }}"
+    when:
+      - cluster_metadata[item] is defined
+      - platform | length == 0
+    loop:
+      - aws
+      - gcp
+
+  - name: Ensure platform
+    fail:
+      msg: "platform is empty"
+    when: platform | length == 0
+
+  - name: Get ssh bastion address
+    command: >
+      oc get service ssh-bastion
+      --kubeconfig={{ kubeconfig }}
+      --namespace=test-ssh-bastion
+      --output=jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+    register: oc_get_bastion
+    until:
+    - oc_get_bastion.stdout != ''
+    changed_when: false
+    when: ssh_bastion | length == 0
+
+  - name: Set fact ssh_bastion
+    set_fact:
+      ssh_bastion: "{{ oc_get_bastion.stdout }}"
+    when: oc_get_bastion is defined
+
+  - name: Get existing worker machinesets
+    command: >
+      oc get machinesets
+      --kubeconfig={{ kubeconfig }}
+      --namespace=openshift-machine-api
+      --output=json
+    register: machineset
+    until:
+    - machineset.stdout != ''
+    changed_when: false
+
+  - include_vars: "vars-{{ platform }}.yaml"
+
+  - include_tasks: "tasks/create-machineset-{{ platform }}.yaml"
+    loop: "{{ (machineset.stdout | from_json)['items'] }}"
+    loop_control:
+      loop_var: machineset_obj
+    when:
+    - machineset_obj.status.replicas is defined
+    - machineset_obj.status.replicas != 0
+
+  - name: Create Inventory directory
+    file:
+      path: "{{ inventory_dir }}"
+      state: directory
+
+  - name: Create Ansible Inventory File
+    template:
+      src: hosts.j2
+      dest: "{{ inventory_dir }}/hosts"

@@ -1,0 +1,32 @@
+---
+- name: Find redhat-rhui repos
+  find:
+    paths: /etc/yum.repos.d
+    patterns: "redhat-rhui*"
+  register: redhat_rhui
+
+- name: Remove redhat-rhui repos
+  file:
+    path: "{{ item['path'] }}"
+    state: absent
+  with_items: "{{ redhat_rhui['files'] }}"
+
+- name: Create rhel-X-server-ose-rpms repo file
+  template:
+    src: "rhel-{{ distribution_version[:1] }}-server-ose-{{ release_version[:1] }}-devel-rpms.repo.j2"
+    dest: "/etc/yum.repos.d/rhel-{{ distribution_version[:1] }}-server-ose-rpms.repo"
+  vars:
+    mirror_url: "{{ openshift_mirror.url  }}"
+    mirror_username: "{{ openshift_mirror.username }}"
+    mirror_password: "{{ openshift_mirror.password }}"
+  notify: refresh cache
+
+- name: Create rhel-X-server-rpms repo file
+  template:
+    src: "rhel-{{ distribution_version[:1] }}-server-rpms.repo.j2"
+    dest: "/etc/yum.repos.d/rhel-{{ distribution_version[:1] }}-server-rpms.repo"
+  vars:
+    mirror_url: "{{ openshift_mirror.url  }}"
+    mirror_username: "{{ openshift_mirror.username }}"
+    mirror_password: "{{ openshift_mirror.password }}"
+  notify: refresh cache

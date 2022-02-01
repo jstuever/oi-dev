@@ -1,0 +1,8 @@
+[rhel-7-server-ose-{{ release_version }}-devel-rpms]
+name = A repository of dependencies for OpenShift Container Platform {{ release_version }}
+baseurl = {{ mirror_url }}/reposync/{{ release_version }}/rhel-server-ose-rpms/
+failovermethod = priority
+gpgcheck = 0
+username = {{ mirror_username }}
+password = {{ mirror_password }}
+enabled = 1
