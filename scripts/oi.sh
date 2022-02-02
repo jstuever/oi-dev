@@ -5,7 +5,7 @@ TOKEN=""
 INSTALLCONFIG=""
 LOGLEVEL="DEBUG"
 PULLSECRET="${HOME}/pull-secret.txt"
-RELEASE="$(openshift-install version | grep '^release image ' | cut -d ':' -f2)"
+RELEASE=""
 
 usage () {
     echo "Usage: $(basename $0) [OPTIONS]... [PARAMETERS]"
@@ -91,8 +91,13 @@ if [ ! -f ${ASSETDIR}/install-config.yaml ] && [ ! -f ${ASSETDIR}/.openshift_ins
     fi
 fi
 
-# Override the release
-export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="registry.ci.openshift.org/ocp/release:${RELEASE}"
+# Override the release parameters on unreleased binaries
+RELEASE_IMAGE="$(openshift-install version | grep '^release image ' | cut -d ' ' -f3)"
+if [ "${RELEASE_IMAGE:0:33}" == "registry.ci.openshift.org/origin/" ]; then
+    DEFAULT_RELEASE="$(openshift-install version | grep '^release image ' | cut -d ':' -f2)"
+    export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="registry.ci.openshift.org/ocp/release:${RELEASE:-${DEFAULT_RELEASE}}"
+    echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
+fi
 
 # Run openshift-install passing unused args
 time openshift-install --dir=${ASSETDIR} --log-level=${LOGLEVEL} $@
