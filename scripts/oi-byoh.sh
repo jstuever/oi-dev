@@ -86,6 +86,17 @@ function scaleup {
         "./openshift-ansible/playbooks/scaleup.yml"
 }
 
+function upgrade {
+    if [ ! -d "./openshift-ansible" ]; then
+        echo "unable to scaleup: openshift-ansible not found."
+        exit
+    fi
+
+    time ansible-playbook -vv \
+        -i "${ASSETDIR}/byoh/hosts" \
+        "./openshift-ansible/playbooks/upgrade.yml"
+}
+
 export KUBECONFIG="${ASSETDIR}/auth/kubeconfig"
 case "${1:-}" in
     'create')
@@ -99,6 +110,9 @@ case "${1:-}" in
         ;;
     'scaleup')
         scaleup
+        ;;
+    'upgrade')
+        upgrade
         ;;
     '')
         bastion
