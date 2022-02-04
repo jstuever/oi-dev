@@ -9,4 +9,4 @@ Oi-dev is a collection of tools to assist developers when working with the OpenS
 - **[[oi.sh]](docs/oi.md)**  Deploys a cluster with the ability to use install-config templates.
 - **watchbootstrap.sh** Displays relevant journal logs on the bootstrap node.
 - **watchcluster.sh**  Displays output from oc commands that show a high-level view of an installation.
-- **watchnodes.sh** Displays the platform's list of instances for an existing cluster.
+- **watchnodes.sh** Displays the cloud provider's list of instances for an existing cluster.
