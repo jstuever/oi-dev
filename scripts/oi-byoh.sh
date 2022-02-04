@@ -15,14 +15,12 @@ function usage () {
     echo "  Options:"
     echo "    -h, --help           help for $(basename $0)"
     echo "    -d, --dir            assets directory (default assets)"
-    echo "    --infra-id           use to name the cloud resources"
-    echo "    --platform	   platform to provision in (aws, gcp, ...)"
-    echo "    --region		   region to provision in (us-east-1, us-east1, ...)"
     echo "  Commands:"
     echo "    bastion              creates the ssh bastion service in the cluster"
     echo "    create               creates the byoh machinesets"
     echo "    prepare              prepares the byoh machines with necessary repositories"
     echo "    scaleup              runs the openshift-ansible scaleup playbook"
+    echo "    upgrade              runs the openshift-ansible upgrade playbook"
 }
 
 SKIPPED=()
