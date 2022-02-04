@@ -18,3 +18,7 @@ If no commands are supplied, the default behavior is to run the following comman
 - **prepare** configures the repositories and other aspects of the byoh hosts to enable the openshift-ansible playbooks to succeed. It requires the hosts file from the create command as well as a json file (~/oi/openshift-mirror.json) containing the .url, .username, and .password to an [openshift enterprise mirror](https://mirror2.openshift.com/enterprise).
 - **scaleup** adds the hosts to the cluster by running the [openshift-ansible](http://www.github.com/openshift/openshift-ansible) scaleup playbook. It requries the hosts file from the create command as well as those hosts having the necessary repos to install the required packages. It expects the version approperiate playbook to exist in ${PWD}/openshift-ansible.
 - **upgrade** upgrades the hosts in the cluster by running the [openshift-ansible](http://www.github.com/openshift/openshift-ansible) upgrade playbook. It requries the hosts file from the create command as well as those hosts having the necessary repos to install the required packages. It expects the version approperiate playbook to exist in ${PWD}/openshift-ansible.
+
+# Customization
+
+The included [playbooks](../playbooks) include options to override some default behavior using environment variables. These variables are prefixed with `OI_` and can be identified by inspecting the relevant playbook.
