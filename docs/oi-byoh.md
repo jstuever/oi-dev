@@ -22,3 +22,4 @@ If no commands are supplied, the default behavior is to run the following comman
 # Customization
 
 The included [playbooks](../playbooks) include options to override some default behavior using environment variables. These variables are prefixed with `OI_` and can be identified by inspecting the relevant playbook.
+- **OI_DISTRIBUTION_VERSION** (default: '8.5') The OS version to use when creating machines.
