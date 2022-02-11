@@ -28,6 +28,7 @@
     loop:
       - "{{ cluster_metadata }}"
       - "{{ infra_id }}"
+      - "{{ ssh_bastion }}"
 
   - name: Determine platform from metadata
     set_fact:
@@ -43,23 +44,6 @@
     fail:
       msg: "platform is empty"
     when: platform | length == 0
-
-  - name: Get ssh bastion address
-    command: >
-      oc get service ssh-bastion
-      --kubeconfig={{ kubeconfig }}
-      --namespace=test-ssh-bastion
-      --output=jsonpath='{.status.loadBalancer.ingress[0].hostname}'
-    register: oc_get_bastion
-    until:
-    - oc_get_bastion.stdout != ''
-    changed_when: false
-    when: ssh_bastion | length == 0
-
-  - name: Set fact ssh_bastion
-    set_fact:
-      ssh_bastion: "{{ oc_get_bastion.stdout }}"
-    when: oc_get_bastion is defined
 
   - name: Get existing worker machinesets
     command: >
