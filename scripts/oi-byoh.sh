@@ -22,6 +22,7 @@ function usage () {
     echo "    create               creates the byoh machinesets"
     echo "    prepare              prepares the byoh machines with necessary repositories"
     echo "    scaleup              runs the openshift-ansible scaleup playbook"
+    echo "    ssh <host>           ssh to a host via the bastion host"
     echo "    upgrade              runs the openshift-ansible upgrade playbook"
 }
 
@@ -70,6 +71,19 @@ function bastion {
     fi
     echo "Creating bastion file: ${ASSETDIR}/byoh/bastion"
     echo "${bastion}" >> "${ASSETDIR}/byoh/bastion"
+}
+
+function bastion_ssh {
+    if [ ! -f "${ASSETDIR}/byoh/bastion" ]; then
+        echo "Unable to ssh: ${ASSETDIR}/byoh/bastion not found."
+        exit;
+    fi
+    echo "$@"
+    ssh -o IdentityFile=${SSHKEY} -o StrictHostKeyChecking=no -o \
+        ProxyCommand="ssh -o IdentityFile=${SSHKEY} -o ConnectTimeout=30 \
+            -o ConnectionAttempts=100 -o StrictHostKeyChecking=no -W %h:%p -q \
+            core@$(<${ASSETDIR}/byoh/bastion)" \
+        $@
 }
 
 function create {
@@ -155,6 +169,10 @@ case "${1:-}" in
         ;;
     'scaleup')
         scaleup
+        ;;
+    'ssh')
+        shift
+        bastion_ssh $@
         ;;
     'upgrade')
         upgrade
