@@ -9,6 +9,8 @@ ASSETDIR="assets"
 INFRAID=""
 PLATFORM=""
 REGION=""
+SSHKEY="${HOME}/.ssh/oi"
+SSHKEYPUB="${SSHKEY}.pub"
 
 function usage () {
     echo "Usage: $(basename $0) [options]... command"
@@ -55,6 +57,7 @@ function create {
         exit
     fi
 
+    OI_SSH_PRIVATE_KEY="${OI_SSH_PRIVATE_KEY:-${SSHKEYPUB}}" \
     time ansible-playbook -vv \
         --extra-vars "{\"asset_dir\":\"$(realpath ${ASSETDIR})\"}" \
         "playbooks/byoh-create-machines.yaml"

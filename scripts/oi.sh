@@ -1,11 +1,13 @@
 #!/bin/sh
 set -o errexit -o pipefail -o nounset
 ASSETDIR="assets"
-TOKEN=""
 INSTALLCONFIG=""
 LOGLEVEL="DEBUG"
-PULLSECRET="${HOME}/pull-secret.txt"
+PULLSECRET="${HOME}/oi/pull-secret.json"
 RELEASE=""
+SSHKEY="${HOME}/.ssh/oi"
+SSHKEYPUB="${SSHKEY}.pub"
+TOKEN=""
 
 usage () {
     echo "Usage: $(basename $0) [OPTIONS]... [PARAMETERS]"
@@ -78,15 +80,23 @@ if [ ! -z "${TOKEN}" ] && [ -f ${PULLSECRET} ]; then
     rm /tmp/secret.json
 fi
 
-# Copy the install-confg if supplied, and update the pull-secret if exists, but only if a cluster not already exists.
+# Copy the install-confg if supplied, but only if a cluster not already exists.
 if [ ! -f ${ASSETDIR}/install-config.yaml ] && [ ! -f ${ASSETDIR}/.openshift_install_state.json ]; then
     if [ ! -z "${INSTALLCONFIG}" ] && [ -f ${INSTALLCONFIG} ]; then
+        cp ${INSTALLCONFIG} ${ASSETDIR}/install-config.yaml
         if [ -f ${PULLSECRET} ]; then
-            PULLSECRETCONTENTS="$(<${PULLSECRET})"
-            grep -v "^pullSecret: " ${INSTALLCONFIG} > ${ASSETDIR}/install-config.yaml
-            echo "pullSecret: '${PULLSECRETCONTENTS}'" >> ${ASSETDIR}/install-config.yaml
-        else
-            cp ${INSTALLCONFIG} ${ASSETDIR}/install-config.yaml
+            python -c "import yaml; \
+            path = '${ASSETDIR}/install-config.yaml'; \
+            data = yaml.full_load(open(path)); \
+            data['pullSecret'] = '$(<${PULLSECRET})'; \
+            open(path, 'w').write(yaml.dump(data, default_flow_style=False));"
+        fi
+        if [ -f ${SSHKEYPUB} ]; then
+            python -c "import yaml; \
+            path = '${ASSETDIR}/install-config.yaml'; \
+            data = yaml.full_load(open(path)); \
+            data['sshKey'] = '$(<${SSHKEYPUB})'; \
+            open(path, 'w').write(yaml.dump(data, default_flow_style=False));"
         fi
     fi
 fi

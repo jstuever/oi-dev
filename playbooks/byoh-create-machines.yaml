@@ -11,7 +11,7 @@
     inventory_dir: "{{ asset_dir }}/byoh"
     kubeconfig: "{{ asset_dir }}/auth/kubeconfig"
     ssh_bastion: "{{ lookup('env', 'OI_SSH_BASTION') | default('', true) }}"
-    ssh_private_key: "{{ lookup('env', 'OI_SSH_PRIVATE_KEY') | default('~/.ssh/id_rsa', true) }}"
+    ssh_private_key: "{{ lookup('env', 'OI_SSH_PRIVATE_KEY') | default('~/.ssh/oi', true) }}"
 
     cluster_metadata: "{{ lookup('file', asset_dir ~ '/metadata.json') | from_json }}"
     infra_id: "{{ lookup('env', 'OI_INFRAID') | default(cluster_metadata.infraID, true) }}"
