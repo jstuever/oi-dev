@@ -33,6 +33,12 @@ else
     else
       IP=$(jq '.resources[] | select(.module == "module.bootstrap") | select(.type == "aws_instance") | select(.name == "bootstrap") | .instances[0].attributes.public_ip' ${ASSETDIR}/terraform.tfstate | tr -d "\"")
     fi
+  elif [ "$(jq '.azure' ${ASSETDIR}/metadata.json)" != 'null' ]; then
+    if [ -f "${ASSETDIR}/terraform.bootstrap.tfstate" ]; then
+      IP=$(jq '.resources[] | select(.mode == "data") | select(.type == "azurerm_public_ip") | .instances[0].attributes.ip_address' ${ASSETDIR}/terraform.bootstrap.tfstate | tr -d "\"")
+    else
+      IP=$(jq '.resources[] | select(.mode == "data") | select(.type == "azurerm_public_ip") | .instances[0].attributes.ip_address' ${ASSETDIR}/terraform.tfstate | tr -d "\"")
+    fi
   elif [ "$(jq '.gcp' ${ASSETDIR}/metadata.json)" != 'null' ]; then
     BOOTSTRAP_JSON=$(gcloud compute instances list --filter="name=${INFRA_ID}-bootstrap" --format json)
     echo ${BOOTSTRAP_JSON}
