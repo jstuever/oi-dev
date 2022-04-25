@@ -31,6 +31,7 @@ If no commands are supplied, the default behavior is to run the following comman
 # Prequisites AWS:
 
 - **keypair** A keypair must exist in the same region as the cluster. It should be named after the local user name ${USER} and must match the ~/.ssh/oi.pub key. This keypair will be assigned to the byoh machinesets and allow the ansible playbooks to connect to the nodes using the ec2-user account.
+- **boto3** The boto3 python module is required to run playbooks on the aws platform.
 
 # Environment Variables
 
