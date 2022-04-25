@@ -24,6 +24,7 @@ If no commands are supplied, the default behavior is to run the following comman
 # Prerequisites
 
 - **ansible** Ansible version 2.10 or newer is require to run the playbooks. It is recommended to create multiple versioned vrirtual environments within the venv folder and activate the desired version prior to running this script. For example: venv/ansible-2.10.7 should have both ansible(2.10.7) and ansible-base(2.10.17) installed, and venv/ansible-5.5.0 should have both ansible(5.5.0) and ansible-core(2.12.4) installed.
+- **selinux** The selinux python module is required by the playbooks in order to save the hosts file.
 - **~/oi/pull-secret.json** This file should contain the concents of your pull secret. If this file exists, then the install config will use the contents to populate the pullSecret field.
 - **~/.ssh/oi: This file** should contain the private ssh key, used to connect to nodes in your cluster.
 - **~/.ssh/oi.pub** This file should contain the public ssh key used to connect to nodes in your cluster. If this file exists, then the install config will use the contents to populate the sshKey field.
