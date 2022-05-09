@@ -67,7 +67,7 @@ if [ ! -n "${IP}" ]; then
   exit
 fi
 
-ssh -i ${OPT_PRIVATE_KEY:-'~/.ssh/openshift-dev.pem'} \
+ssh -i ${OPT_PRIVATE_KEY:-'~/.ssh/oi'} \
     -o ConnectTimeout=5 \
     -o StrictHostKeyChecking=no \
     -o PasswordAuthentication=no \
