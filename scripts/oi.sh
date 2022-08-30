@@ -107,7 +107,6 @@ if [ "${RELEASE_IMAGE:0:41}" == "registry.ci.openshift.org/origin/release:" ]; t
     export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="registry.ci.openshift.org/ocp/release:${RELEASE:-${RELEASE_IMAGE:41}}"
     echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 fi
-exit
 
 # Run openshift-install passing unused args
 time openshift-install --dir=${ASSETDIR} --log-level=${LOGLEVEL} $@
