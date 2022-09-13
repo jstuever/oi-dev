@@ -41,7 +41,7 @@ else
     fi
   elif [ "$(jq '.gcp' ${ASSETDIR}/metadata.json)" != 'null' ]; then
     BOOTSTRAP_JSON=$(gcloud compute instances list --filter="name=${INFRA_ID}-bootstrap" --format json)
-    echo ${BOOTSTRAP_JSON}
+    #echo ${BOOTSTRAP_JSON}
     if [ "${BOOTSTRAP_JSON}" == '[]' ]; then
       echo "Bootstrap instance not found: ${INFRA_ID}-bootstrap"
       exit
