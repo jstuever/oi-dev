@@ -7,7 +7,7 @@ if [[ "$1" == "--execute" ]]; then
 fi
 
 # Input assetdir $1, or default to assets.
-ASSETDIR="${1-assets}"
+ASSETDIR="${1-${ASSETDIR-assets}}"
 
 if [[ ${_EXECUTE-0} == 0 ]]; then
   # Watch while we re-run the script with --execute.

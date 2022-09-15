@@ -7,7 +7,7 @@ if [[ "$1" == "--execute" ]]; then
 fi
 
 # Input assetdir $1, or default to assets.
-ASSETDIR="${1-assets}"
+ASSETDIR="${1-${ASSETDIR-assets}}"
 export KUBECONFIG=${ASSETDIR}/auth/kubeconfig
 
 if [[ ${_EXECUTE-0} == 0 ]]; then
