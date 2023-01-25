@@ -36,7 +36,7 @@
 
   - name: Wait for host connection to ensure SSH has started
     wait_for_connection:
-      timeout: 600
+      timeout: 1800
 
   - name: Create OCP devel repos
     include_tasks: tasks/devel-repos.yaml
