@@ -24,6 +24,8 @@ function usage () {
     echo "    scaleup              runs the openshift-ansible scaleup playbook"
     echo "    ssh <host>           ssh to a host via the bastion host"
     echo "    upgrade              runs the openshift-ansible upgrade playbook"
+    echo "    delete               deletes the byoh resources"
+    echo "    clean                cleanup all installer created artifacts"
 }
 
 SKIPPED=()
@@ -100,7 +102,7 @@ function create {
     fi
 
     OI_SSH_BASTION="${OI_SSH_BASTION:-$(<${ASSETDIR}/byoh/bastion)}" \
-    OI_SSH_PRIVATE_KEY="${OI_SSH_PRIVATE_KEY:-${SSHKEYPUB}}" \
+    OI_SSH_PRIVATE_KEY="${OI_SSH_PRIVATE_KEY:-${SSHKEY}}" \
     time ansible-playbook -vv \
         --extra-vars "{\"asset_dir\":\"$(realpath ${ASSETDIR})\"}" \
         "playbooks/byoh-create-machines.yaml"
@@ -156,6 +158,30 @@ function upgrade {
         "./openshift-ansible/playbooks/upgrade.yml"
 }
 
+function deleteBYOH {
+    echo "$(date -u --rfc-3339=seconds) - Deleting CoreOS machinesets"
+    mapfile -t COREOS_MACHINE_SETS < <(oc get machinesets --namespace openshift-machine-api | grep worker | grep -v rhel | awk '{print $1}' || true)
+
+    if [[ ${#COREOS_MACHINE_SETS[@]} != 0 ]]
+    then
+        oc delete machinesets --namespace openshift-machine-api "${COREOS_MACHINE_SETS[@]}"
+    fi
+
+    echo "$(date -u --rfc-3339=seconds) - Waiting for CoreOS nodes to be removed"
+    oc wait node \
+       --for=delete \
+       --timeout=10m \
+       --selector node.openshift.io/os_id=rhcos,node-role.kubernetes.io/worker \
+        || true
+
+    echo "$(date -u --rfc-3339=seconds) - Waiting for bastion service to be removed"
+    oc delete service ssh-bastion -n test-ssh-bastion
+
+    if [ -d "${ASSETS_DIR}/byoh" ]; then
+        rm -rf "${ASSETS_DIR}/byoh"
+    fi
+}
+
 export KUBECONFIG="${ASSETDIR}/auth/kubeconfig"
 case "${1:-}" in
     'create')
@@ -176,6 +202,13 @@ case "${1:-}" in
         ;;
     'upgrade')
         upgrade
+        ;;
+    'delete')
+        deleteBYOH
+        ;;
+    'clean')
+        deleteBYOH
+        openshift-install destroy cluster --dir="${ASSETDIR}"
         ;;
     '')
         if [ ! -f "${ASSETDIR}/byoh/bastion" ]; then
