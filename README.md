@@ -1,6 +1,6 @@
-# Oi-dev
+# Openshfit Ansible Assistant
 
-Oi-dev is a collection of tools to assist developers when working with the OpenShift Installer project. This is not an official OpenShift repository and should not be considered supported by Red Hat.
+Openshfit Ansible Assistant is a collection of tools to assist developers when working with the OpenShift Installer project. This is not an official OpenShift repository and should not be considered supported by Red Hat.
 
 # Scripts:
 
