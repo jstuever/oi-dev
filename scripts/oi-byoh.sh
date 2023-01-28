@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Prerequisites:
 # - the assets folder from a provisioned cluster
 # - an ssh key, available in the cloud
@@ -48,6 +48,21 @@ while [[ $# -gt 0 ]]; do case $1 in
 esac done
 set -- "${SKIPPED[@]}"
 
+function createBastionSearch {
+    searchText=''
+    platform="$(oc describe infrastructure cluster | grep "Platform:" | awk '{print tolower($2)}')"
+    case $platform in
+	"gcp")
+	    searchText="\'{.status.loadBalancer.ingress[0].ip}\'"
+	    ;;
+	"aws")
+	    searchText="\'{.status.loadBalancer.ingress[0].hostname}\'"
+	    ;;
+    esac
+
+    echo $searchText
+}
+
 function bastion {
     if [ -f "${ASSETDIR}/byoh/bastion" ]; then
         echo "Using existing bastion: ${ASSETDIR}/byoh/bastion"
@@ -57,12 +72,14 @@ function bastion {
         echo "unable to create bastion: ${KUBECONFIG} not found."
         exit;
     fi
-    bastion="$(oc get service -n test-ssh-bastion ssh-bastion -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || echo '')"
+
+    bastionText=$(creationBastionSearch)
+    bastion="$(oc get service -n test-ssh-bastion ssh-bastion -o jsonpath=${bastionText} || echo '')"
     if [ -z "${bastion}" ]; then
         echo "Setting up ssh bastion host..."
         export SSH_BASTION_NAMESPACE=test-ssh-bastion
         curl https://raw.githubusercontent.com/eparis/ssh-bastion/master/deploy/deploy.sh | bash -x
-        bastion="$(oc get service -n test-ssh-bastion ssh-bastion -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || echo '')"
+        bastion="$(oc get service -n test-ssh-bastion ssh-bastion -o jsonpath=${bastionText} || echo '')"
     fi
     if [ -z "${bastion}" ]; then
         echo "unable to create bastion."
