@@ -1,5 +1,5 @@
 ---
-aws_distribution_dict:
+distribution_dict:
   centos:
     username: "centos"
     owners: "679593333241"

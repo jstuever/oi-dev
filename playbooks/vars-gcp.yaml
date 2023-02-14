@@ -1,0 +1,19 @@
+---
+distribution_dict:
+  centos:
+    username: "centos"
+    filters:
+      product-code: "aw0evgkw8e5c1q413zgy5pjce"  # CentOS-7 x86_64
+  rhel:
+    username: "gcp-user"
+    filters:
+      - "name~{{ cluster_metadata.infraID | default(lookup('env', 'USER'), true) }}-worker"
+gcp_key_name: "{{ lookup('env', 'OI_GCP_KEY_NAME') | default(lookup('env', 'USER'), true) }}"
+gcp_region: "{{ cluster_metadata.gcp.region | default('us-east1') }}"
+gcp_project: "{{ cluster_metadata.gcp.projectID | default('openshift-dev-installer') }}"
+gcp_zone: "{{ gcp_region }}-b"
+gcp_service_account_file: "/home/{{ lookup('env', 'USER') }}/.gcp/osServiceAccount.json"
+gcp_instance_pattern: "{{ cluster_metadata.infraID | default(lookup('env', 'USER'), true) }}-worker"
+# the following can be altered but for now use a known image
+rhel_image: "rhel-8-v20230202"
+gcp_image: "projects/rhel-cloud/global/images/{{ rhel_image }}"

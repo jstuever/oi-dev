@@ -1,20 +1,39 @@
 ---
-- name: Retrieve platform AMI list
-  amazon.aws.ec2_ami_info:
-    region: "{{ aws_region }}"
-    owners: "{{ distribution_dict[distribution].owners }}"
-    filters: "{{ distribution_dict[distribution].filters }}"
-  register: ec2_ami_facts_results
+- name: Retrieve platform instance list
+  google.cloud.gcp_compute_instance_info:
+    auth_kind: "serviceaccount"
+    zone: "{{ machineset_obj.spec.template.spec.providerSpec.value.zone }}"
+    project: "{{ gcp_project }}"
+    service_account_file: "{{ gcp_service_account_file }}"
+#    filters:
+#    - "name~{{ gcp_instance_pattern }}"
+  register: gcp_machines
   run_once: true
 
-- name: Set aws_ami to most recent image
+- name: Set gcp machine data to most recent image
   set_fact:
-    aws_ami: "{{ ec2_ami_facts_results.images[-1].image_id }}"
+    gcp_machine_id: "{{ gcp_machines.resources[-1].id }}"
+    gcp_machine_name: "{{gcp_machines.resources[-1].name}}"
   run_once: true
 
 - name: Create machineset_name
   set_fact:
-    machineset_name: "{{ machineset_obj.metadata.name ~ '-' ~ distribution ~ '-' ~ distribution_version }}"
+    machineset_name: "{{ gcp_machine_name ~ '-' ~ distribution ~ '-' ~ distribution_version | replace('.', '') }}"
+
+- name: Debug Printing
+  ansible.builtin.debug:
+    msg:
+    - "{{ gcp_machine_id }}"
+    - "{{ gcp_machine_name }}"
+    - "{{ machineset_name }}"
+
+- name: Debug machineset
+  ansible.builtin.debug:
+    msg:
+    - "{{ machineset_obj }}"
+
+# stop the playbook here
+#- ansible.builtin.meta: end_play
 
 - name: Update machineset definition
   set_fact:
@@ -35,9 +54,24 @@
           spec:
             providerSpec:
               value:
-                ami:
-                  id: "{{ aws_ami }}"
-                keyName: "{{ aws_key_name }}"
+                disks:
+                  -
+                    image: "{{ gcp_image }}"
+                    sizeGb: 128
+                    type: "pd-ssd"
+                    boot: true
+                    autoDelete: true
+#          spec:
+#            providerSpec:
+#              value:
+#                ami:
+#                  id: "{{ gcp_machine_id }}"
+#                keyName: "{{ gcp_key_name }}"
+
+- name: Debug machineset rhel
+  ansible.builtin.debug:
+    msg:
+    - "{{ machineset }}"
 
 - name: Import machineset definition
   command: >

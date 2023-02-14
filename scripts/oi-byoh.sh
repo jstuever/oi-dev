@@ -53,10 +53,10 @@ function createBastionSearch {
     platform="$(oc describe infrastructure cluster | grep "Platform:" | awk '{print tolower($2)}')"
     case $platform in
 	"gcp")
-	    searchText="\'{.status.loadBalancer.ingress[0].ip}\'"
+	    searchText="{.status.loadBalancer.ingress[0].ip}"
 	    ;;
 	"aws")
-	    searchText="\'{.status.loadBalancer.ingress[0].hostname}\'"
+	    searchText="{.status.loadBalancer.ingress[0].hostname}"
 	    ;;
     esac
 
@@ -73,7 +73,7 @@ function bastion {
         exit;
     fi
 
-    bastionText=$(creationBastionSearch)
+    bastionText=$(createBastionSearch)
     bastion="$(oc get service -n test-ssh-bastion ssh-bastion -o jsonpath=${bastionText} || echo '')"
     if [ -z "${bastion}" ]; then
         echo "Setting up ssh bastion host..."
@@ -120,7 +120,7 @@ function create {
 
     OI_SSH_BASTION="${OI_SSH_BASTION:-$(<${ASSETDIR}/byoh/bastion)}" \
     OI_SSH_PRIVATE_KEY="${OI_SSH_PRIVATE_KEY:-${SSHKEY}}" \
-    time ansible-playbook -vv \
+    time ansible-playbook -vvvv \
         --extra-vars "{\"asset_dir\":\"$(realpath ${ASSETDIR})\"}" \
         "playbooks/byoh-create-machines.yaml"
 }
