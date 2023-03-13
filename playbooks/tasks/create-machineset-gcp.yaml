@@ -18,19 +18,7 @@
 
 - name: Create machineset_name
   set_fact:
-    machineset_name: "{{ gcp_machine_name ~ '-' ~ distribution ~ '-' ~ distribution_version | replace('.', '') }}"
-
-- name: Debug Printing
-  ansible.builtin.debug:
-    msg:
-    - "{{ gcp_machine_id }}"
-    - "{{ gcp_machine_name }}"
-    - "{{ machineset_name }}"
-
-- name: Debug machineset
-  ansible.builtin.debug:
-    msg:
-    - "{{ machineset_obj }}"
+    machineset_name: "{{ machineset_obj.metadata.name ~ '-' ~ distribution ~ '-' ~ distribution_version | replace('.', '') }}"
 
 # stop the playbook here
 #- ansible.builtin.meta: end_play

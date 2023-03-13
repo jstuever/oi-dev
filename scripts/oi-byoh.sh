@@ -52,7 +52,7 @@ function createBastionSearch {
     searchText=''
     platform="$(oc describe infrastructure cluster | grep "Platform:" | awk '{print tolower($2)}')"
     case $platform in
-	"gcp")
+	"gcp"|"azure")
 	    searchText="{.status.loadBalancer.ingress[0].ip}"
 	    ;;
 	"aws")

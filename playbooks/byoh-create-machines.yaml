@@ -39,6 +39,7 @@
     loop:
       - aws
       - gcp
+      - azure
 
   - name: Ensure platform
     fail:
