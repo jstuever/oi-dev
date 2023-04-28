@@ -5,7 +5,7 @@ distribution_dict:
     filters:
       product-code: "aw0evgkw8e5c1q413zgy5pjce"  # CentOS-7 x86_64
   rhel:
-    username: "gcp-user"
+    username: "{{ lookup('env', 'USER') }}"
     filters:
       - "name~{{ cluster_metadata.infraID | default(lookup('env', 'USER'), true) }}-worker"
 gcp_key_name: "{{ lookup('env', 'OI_GCP_KEY_NAME') | default(lookup('env', 'USER'), true) }}"
