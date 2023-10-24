@@ -35,7 +35,7 @@ else
     fi
   elif [ "$(jq '.azure' ${ASSETDIR}/metadata.json)" != 'null' ]; then
     if [ -f "${ASSETDIR}/terraform.bootstrap.tfstate" ]; then
-      IP=$(jq '.resources[] | select(.mode == "data") | select(.type == "azurerm_public_ip") | .instances[0].attributes.ip_address' ${ASSETDIR}/terraform.bootstrap.tfstate | tr -d "\"")
+        IP=$(jq -r '.outputs.bootstrap_ip.value' assets/terraform.bootstrap.tfstate)
     else
       IP=$(jq '.resources[] | select(.mode == "data") | select(.type == "azurerm_public_ip") | .instances[0].attributes.ip_address' ${ASSETDIR}/terraform.tfstate | tr -d "\"")
     fi
