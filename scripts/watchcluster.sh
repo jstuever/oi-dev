@@ -8,7 +8,8 @@ fi
 
 # Input assetdir $1, or default to assets.
 ASSETDIR="${1-${ASSETDIR-assets}}"
-export KUBECONFIG=${ASSETDIR}/auth/kubeconfig
+export KUBECONFIG=${KUBECONFIG-${ASSETDIR}/auth/kubeconfig}
+REQUEST_TIMEOUT=${REQUEST_TIMEOUT-5}
 
 if [[ ${_EXECUTE-0} == 0 ]]; then
   # Watch while we re-run the script with --execute.
@@ -17,17 +18,18 @@ if [[ ${_EXECUTE-0} == 0 ]]; then
 fi
 
 # Now we --execute
-if [ -s ${KUBECONFIG} ]; then
-  oc --request-timeout=2 get clusterversion --no-headers
-  if [[ $? -ne 0 ]]; then
-    exit
-  fi
-  oc --request-timeout=2 get events -o json |
-    jq -r '.items[] | select(.type != "Normal") | select(.reason != "Rebooted") | .lastTimestamp + " " + .type + " " + .reason + ": " + .message' |
-    tail -n 5
-  oc --request-timeout=2 get nodes
-  oc --request-timeout=2 get csr --no-headers --sort-by='.metadata.creationTimestamp' | grep 'Pending'
-  oc --request-timeout=2 get clusteroperator | grep -v 'True        False         False'
-else
+if [ ! -s ${KUBECONFIG} ]; then
   echo "${KUBECONFIG} not found."
+  exit
 fi
+
+oc --request-timeout=2 get clusterversion --no-headers
+if [[ $? -ne 0 ]]; then
+  exit
+fi
+oc --request-timeout=${REQUEST_TIMEOUT} get events -o json |
+  jq -r '.items[] | select(.type != "Normal") | select(.reason != "Rebooted") | .lastTimestamp + " " + .type + " " + .reason + ": " + .message' |
+  tail -n 5
+oc --request-timeout=${REQUEST_TIMEOUT} get nodes
+oc --request-timeout=${REQUEST_TIMEOUT} get csr --no-headers --sort-by='.metadata.creationTimestamp' | grep 'Pending'
+oc --request-timeout=${REQUEST_TIMEOUT} get clusteroperator | grep -v 'True        False         False'
