@@ -83,7 +83,7 @@ fi
 # Override the release parameters on unreleased binaries
 RELEASE_IMAGE="$(openshift-install version | grep '^release image ' | cut -d ' ' -f3)"
 if [ "${RELEASE_IMAGE:0:41}" == "registry.ci.openshift.org/origin/release:" ]; then
-    export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="registry.ci.openshift.org/ocp/release:${RELEASE:-${RELEASE_IMAGE:41}}"
+    export OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE="${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE:-registry.ci.openshift.org/ocp/release:${RELEASE:-${RELEASE_IMAGE:41}}}"
     echo "OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE=${OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE}"
 fi
 
