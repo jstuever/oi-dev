@@ -70,7 +70,9 @@ if [ -z "${TOKEN}" ]; then
     exit 1
 fi
 
-oc login --server="${SERVER}" --token="${TOKEN}" >> /dev/null
-oc registry login --to /tmp/secret.json
-echo $(jq -sc '.[0] * .[1]' ${PULLSECRET} /tmp/secret.json) > ${PULLSECRET}
-rm /tmp/secret.json
+TEMPDIR=$(mktemp -d)
+
+KUBECONFIG="${TEMPDIR}/kubeconfig" oc login --server="${SERVER}" --token="${TOKEN}" >> /dev/null
+KUBECONFIG="${TEMPDIR}/kubeconfig" oc registry login --to "${TEMPDIR}/secret.json"
+echo $(jq -sc '.[0] * .[1]' ${PULLSECRET} "${TEMPDIR}/secret.json") > ${PULLSECRET}
+rm -rf $TEMPDIR
