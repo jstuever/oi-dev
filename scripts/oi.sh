@@ -60,7 +60,6 @@ while [[ $# -gt 0 ]]; do case $1 in
 esac done
 set -- "${SKIPPED[@]}"
 
-echo $ASSETDIR
 # Default assetdir to cluster name when set
 if [ ! -z "${CLUSTER_NAME}" ] && [ "${ASSETDIR}" == "assets" ]; then
 	ASSETDIR=${CLUSTER_NAME}
