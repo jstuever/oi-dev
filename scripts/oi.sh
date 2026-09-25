@@ -1,6 +1,7 @@
 #!/bin/sh
 set -o errexit -o pipefail -o nounset
 ASSETDIR="assets"
+CLUSTER_NAME=""
 INSTALLCONFIG=""
 LOGLEVEL="DEBUG"
 PULLSECRET="${HOME}/oi/pull-secret.json"
@@ -10,9 +11,10 @@ SSHKEYPUB="${HOME}/.ssh/oi.pub"
 usage () {
     echo "Usage: $(basename $0) [OPTIONS]... [PARAMETERS]"
     echo "    -h, --help           help for $(basename $0)"
-    echo "    -d, --dir            assets directory (default assets)"
+    echo "    -d, --dir            assets directory (default to name or 'assets')"
     echo "    -i, --install-config path to existing install-config"
     echo "    -l, --log-level      log level (e.g. debug | info | warn | error) (default debug)"
+    echo "    -n, --name           cluster name to be used in install-config.yaml"
     echo "    -r, --release        release image override version (e.g. 4.2, 4.3, ...)"
 }
 
@@ -43,6 +45,10 @@ while [[ $# -gt 0 ]]; do case $1 in
         LOGLEVEL="$2"
         shift 2
         ;;
+    -n|--name)
+        CLUSTER_NAME="$2"
+        shift 2
+        ;;
     -r|--release)
         RELEASE="$2"
         shift 2
@@ -53,6 +59,12 @@ while [[ $# -gt 0 ]]; do case $1 in
         ;;
 esac done
 set -- "${SKIPPED[@]}"
+
+echo $ASSETDIR
+# Default assetdir to cluster name when set
+if [ ! -z "${CLUSTER_NAME}" ] && [ "${ASSETDIR}" == "assets" ]; then
+	ASSETDIR=${CLUSTER_NAME}
+fi
 
 # Create the asset dir if not exists.
 if [ ! -d ${ASSETDIR} ]; then
@@ -78,6 +90,15 @@ if [ ! -f ${ASSETDIR}/install-config.yaml ] && [ ! -f ${ASSETDIR}/.openshift_ins
             open(path, 'w').write(yaml.dump(data, default_flow_style=False));"
         fi
     fi
+fi
+
+# Modify the cluster name when set and install-config exists.
+if [ ! -z "${CLUSTER_NAME}" ] && [ -f ${ASSETDIR}/install-config.yaml ]; then
+    python -c "import yaml; \
+    path = '${ASSETDIR}/install-config.yaml'; \
+    data = yaml.full_load(open(path)); \
+    data['metadata']['name'] = '${CLUSTER_NAME}'; \
+    open(path, 'w').write(yaml.dump(data, default_flow_style=False));"
 fi
 
 # Override the release parameters on unreleased binaries
